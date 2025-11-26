@@ -5,6 +5,11 @@ const users = [
 
 let nextId = 3;
 
+// Helper function to find user by email
+const findUserByEmail = (email) => {
+  return users.find(u => u.email.toLowerCase() === email.toLowerCase());
+};
+
 const getAllUsers = async (req, res) => {
   try {
     // TODO: Replace with actual database query
@@ -29,10 +34,16 @@ const getAllUsers = async (req, res) => {
 };
 
 const getUserById = (req, res) => {
-  const user = users.find(u => u.id === parseInt(req.params.id));
+  const userId = parseInt(req.params.id);
+  
+  if (isNaN(userId)) {
+    return res.status(400).json({ success: false, message: 'Invalid user ID' });
+  }
+  
+  const user = users.find(u => u.id === userId);
   
   if (!user) {
-    return res.status(404).json({ success: false, message: 'User not found' });
+    return res.status(404).json({ success: false, message: `User with ID ${userId} not found` });
   }
   
   res.json({ success: true, data: user });
@@ -54,7 +65,7 @@ const createUser = async (req, res) => {
     }
     
     // Check for duplicate email
-    const existingUser = users.find(u => u.email === email);
+    const existingUser = findUserByEmail(email);
     if (existingUser) {
       return res.status(409).json({ success: false, message: 'Email already exists' });
     }
