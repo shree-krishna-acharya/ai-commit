@@ -1,4 +1,4 @@
-name: AI PR Review
+name: AI PR Review (Alternative)
 
 on:
   pull_request:
@@ -10,21 +10,16 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+      issues: write
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
 
-      - name: AI Code Review
-        uses: coderabbitai/ai-pr-reviewer@latest
-        env:
+      - name: AI PR Reviewer
+        uses: freeedcom/ai-codereviewer@main
+        with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        with:
-          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          model: gpt-4
-          review_simple_changes: false
-          review_comment_lgtm: false
+          OPENAI_API_MODEL: "gpt-4"
+          exclude: "**/*.json, **/*.md, **/*.yml, **/*.yaml, **/package-lock.json, **/yarn.lock"
