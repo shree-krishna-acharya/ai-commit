@@ -5,8 +5,27 @@ const users = [
 
 let nextId = 3;
 
-const getAllUsers = (req, res) => {
-  res.json({ success: true, data: users });
+const getAllUsers = async (req, res) => {
+  try {
+    // TODO: Replace with actual database query
+    const { page = 1, limit = 10 } = req.query;
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+    
+    const paginatedUsers = users.slice(startIndex, endIndex);
+    
+    res.json({ 
+      success: true, 
+      data: paginatedUsers,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total: users.length
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 };
 
 const getUserById = (req, res) => {
@@ -19,22 +38,40 @@ const getUserById = (req, res) => {
   res.json({ success: true, data: user });
 };
 
-const createUser = (req, res) => {
-  const { name, email, role } = req.body;
-  
-  if (!name || !email) {
-    return res.status(400).json({ success: false, message: 'Name and email are required' });
+const createUser = async (req, res) => {
+  try {
+    const { name, email, role } = req.body;
+    
+    // Validation
+    if (!name || !email) {
+      return res.status(400).json({ success: false, message: 'Name and email are required' });
+    }
+    
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ success: false, message: 'Invalid email format' });
+    }
+    
+    // Check for duplicate email
+    const existingUser = users.find(u => u.email === email);
+    if (existingUser) {
+      return res.status(409).json({ success: false, message: 'Email already exists' });
+    }
+    
+    const newUser = {
+      id: nextId++,
+      name,
+      email,
+      role: role || 'user',
+      createdAt: new Date().toISOString()
+    };
+    
+    users.push(newUser);
+    res.status(201).json({ success: true, data: newUser });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
-  
-  const newUser = {
-    id: nextId++,
-    name,
-    email,
-    role: role || 'user'
-  };
-  
-  users.push(newUser);
-  res.status(201).json({ success: true, data: newUser });
 };
 
 const updateUser = (req, res) => {
