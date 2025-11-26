@@ -108,13 +108,23 @@ const createProduct = async (req, res) => {
 };
 
 const updateProduct = (req, res) => {
-  const productIndex = products.findIndex(p => p.id === parseInt(req.params.id));
+  const productId = parseInt(req.params.id);
+  
+  if (isNaN(productId)) {
+    return res.status(400).json({ success: false, message: 'Invalid product ID' });
+  }
+  
+  const productIndex = products.findIndex(p => p.id === productId);
   
   if (productIndex === -1) {
     return res.status(404).json({ success: false, message: 'Product not found' });
   }
   
-  products[productIndex] = { ...products[productIndex], ...req.body };
+  const updates = { ...req.body };
+  if (updates.name) updates.name = updates.name.trim();
+  if (updates.category) updates.category = updates.category.trim();
+  
+  products[productIndex] = { ...products[productIndex], ...updates };
   res.json({ success: true, data: products[productIndex] });
 };
 
