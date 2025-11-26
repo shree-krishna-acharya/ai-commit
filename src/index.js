@@ -2,13 +2,24 @@ const express = require('express');
 const userRoutes = require('./routes/users');
 const productRoutes = require('./routes/products');
 const authMiddleware = require('./middleware/auth');
+const logger = require('./utils/logger');
+const rateLimiter = require('./middleware/rateLimiter');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Request logging
+app.use((req, res, next) => {
+  logger.info(`${req.method} ${req.path}`, { ip: req.ip, userAgent: req.get('user-agent') });
+  next();
+});
+
+// Rate limiting
+app.use(rateLimiter);
 
 // CORS middleware
 app.use((req, res, next) => {
